@@ -1,13 +1,13 @@
 {
   "ALERT_THRESHOLD": 0,
   "TB_COST": 5,
-  "SLACK_ALERT": true,
+  "SLACK_ALERT": false,
   "SLACK_WEBHOOK_URL": "",
   "SLACK_WEB_API_TOKEN": "",
   "SLACK_WEB_API_DESTINATION_CHANNEL": "",
-  "EMAIL_ALERT": true,
+  "EMAIL_ALERT": false,
   "SENDGRID_API_KEY": "",
-  "EMAIL_SENDER": "ohaionm@gmail.com",
+  "EMAIL_SENDER": "",
   "EMAIL_CC": [
   ],
   "FIELDS_TO_RETRIEVE": [
