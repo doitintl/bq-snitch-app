@@ -1,0 +1,4 @@
+google
+google-cloud-bigquery==1.18.0
+sendgrid==6.0.5
+slackclient==2.1.0
