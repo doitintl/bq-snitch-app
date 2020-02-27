@@ -17,8 +17,10 @@ config = json.loads(data)
 def hello_world():
     print("test test test")
     job_id = request.get_json()["protoPayload"]["serviceData"]["jobCompletedEvent"]["job"]["jobName"]["jobId"]
-    alert_threshold = config['ALERT_THRESHOLD']
-    tera_bytes_cost = config['TB_COST']
+    # alert_threshold = config['ALERT_THRESHOLD']
+    alert_threshold = int(os.environ.get("ALERT_THRESHOLD"))
+    # tera_bytes_cost = config['TB_COST']
+    tera_bytes_cost = int(os.environ.get("TB_COST"))
     client = bigquery.Client()
     job = client.get_job(job_id)
     if not hasattr(job, 'total_bytes_billed'):
@@ -32,34 +34,52 @@ def hello_world():
     if total_cost >= alert_threshold:
         print("Job violated cost threshold limit")
         giga_bytes_billed = total_tera_bytes_billed * 1024
-        fields_to_retrieve = config['FIELDS_TO_RETRIEVE']
+        # fields_to_retrieve = config['FIELDS_TO_RETRIEVE']
+        fields_to_retrieve = os.environ.get("FIELDS_TO_RETRIEVE", "").split(",")
         customize_details = ""
         for field in fields_to_retrieve:
             customize_details = customize_details + field + "=" + str(getattr(job, field, "Non")) + ", "
 
         print("Job details: \n" + customize_details)
-        slack_alert = config['SLACK_ALERT']
+        # slack_alert = config['SLACK_ALERT']
+        slack_alert = str_to_bool(os.environ.get("SLACK_ALERT"))
         if slack_alert:
             print("Sending slack alert")
-            wekbook_url = config['SLACK_WEBHOOK_URL']
-            web_api_token = config['SLACK_WEB_API_TOKEN']
-            dest_channel = config['SLACK_WEB_API_DESTINATION_CHANNEL']
+            # wekbook_url = config['SLACK_WEBHOOK_URL']
+            webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
+            # web_api_token = config['SLACK_WEB_API_TOKEN']
+            web_api_token = os.environ.get("SLACK_WEB_API_TOKEN")
+            # dest_channel = config['SLACK_WEB_API_DESTINATION_CHANNEL']
+            dest_channel = os.environ.get("SLACK_WEB_API_DESTINATION_CHANNEL")
 
-            alert_channels.send_slack_alert(wekbook_url, web_api_token, dest_channel, job.query, job_id, project,
+            alert_channels.send_slack_alert(webhook_url, web_api_token, dest_channel, job.query, job_id, project,
                                             location, job.user_email, total_cost, giga_bytes_billed, customize_details)
 
-        email_alert = config['EMAIL_ALERT']
+        # email_alert = config['EMAIL_ALERT']
+        email_alert = str_to_bool(os.environ.get("EMAIL_ALERT"))
         if email_alert:
             print("Sending email alert")
-            sender = config['EMAIL_SENDER']
-            cc_list = config['EMAIL_CC']
-            sendgrid_api_key = config['SENDGRID_API_KEY']
+            # sender = config['EMAIL_SENDER']
+            sender = os.environ.get("EMAIL_SENDER")
+            # cc_list = config['EMAIL_CC']
+            cc_list = os.environ.get("EMAIL_CC", "").split(",")
+            # sendgrid_api_key = config['SENDGRID_API_KEY']
+            sendgrid_api_key = os.environ.get("SENDGRID_API_KEY")
             alert_channels.send_email_alert(sendgrid_api_key, sender, job.query, job_id, project, location,
                                             job.user_email, cc_list, total_cost, giga_bytes_billed, customize_details)
     else:
         print("Job didn't violate cost threshold limit")
 
     return "BQ-Snitch Finished"
+
+
+def str_to_bool(s):
+    if s.lower() == 'true':
+        return True
+    elif s.lower() == 'false':
+        return False
+    else:
+        raise ValueError
 
 
 if __name__ == "__main__":

@@ -42,3 +42,6 @@ gcloud config set project $PROJECT_ID
 
 gcloud beta functions deploy bq_informer --trigger-event google.cloud.bigquery.job.complete --trigger-resource projects/${PROJECT_ID}/jobs/{jobId} --runtime python37
 ```
+
+# Creaete trigger
+gcloud alpha events triggers create bigquery-trigger-6 --target-service helloworld-python --type com.google.cloud.auditlog.event --parameters methodName=jobservice.jobcompleted,serviceName=bigquery.googleapis.com
