@@ -1,9 +1,20 @@
 # BigQuery Snitch
-Implemented as Google Cloud Function and triggered by BigQuery `query` job to inform the user/channel on Email/Slack along with query details (date/time, syntax, amount of scanned data and cost).
+Implemented as Google Cloud Run and triggered by BigQuery `query` job to inform the user/channel on Email/Slack along with query details (date/time, syntax, amount of scanned data and cost).
+
+# Authorization
+To use Events for Cloud Run, ensure that you have the roles/run.admin role which grants you run.triggers.* permissions. 
+Users with project owner/editor roles have these permissions by default. To grant these permissions to another user, ensure they are granted one of these roles. 
+You may run one of the following commands to do so:
+
+gcloud projects add-iam-policy-binding [PROJECT-NAME] --member user:[USER-EMAIL-ADDRESS] --role roles/editor
+OR
+gcloud projects add-iam-policy-binding [PROJECT-NAME] --member user:[USER-EMAIL-ADDRESS] --role roles/owner
+OR
+gcloud projects add-iam-policy-binding [PROJECT-NAME] --member user:[USER-EMAIL-ADDRESS] --role roles/run.admin
 
 # Configuration
 
-Before deploying the function, adjust the properties in config.json:
+Before deploying the function, adjust the properties in Dockerfile:
 
  - **ALERT_THRESHOLD** - Any query reaching this value will trigger an alert, i.e. `1` means $1.0 USD
 
@@ -27,21 +38,36 @@ https://api.slack.com/web
 
  - **EMAIL_RECIPIENTS** - List of additional emails to receive the alerts. Alerts will always be sent to the user who has executed the query.
   
- - **FIELDS_TO_RETRIEVE** - Define which first level fields you want to retrieve from the job data, in order to send it in an alert message. Optional fields can be found here:  https://googleapis.github.io/google-cloud-python/latest/bigquery/generated/google.cloud.bigquery.job.QueryJob.html#google.cloud.bigquery.job.QueryJob 
-
 # Deploy Function
 
-To deploy the function, execute the following commands. Replace the `project_number` with the project number where you deploy the function.
+To deploy the app to Cloud Run, execute the following commands. Replace the `project_number` with the project number where you deploy the app.
 
 ```
-gcloud projects add-iam-policy-binding <project_name> --role=roles/cloudfunctions.serviceAgent --member=serviceAccount:service-<project_number>@gcf-admin-robot.iam.gserviceaccount.com
-
 export PROJECT_ID=YOUR-PROJECT-ID
 
 gcloud config set project $PROJECT_ID
 
-gcloud beta functions deploy bq_informer --trigger-event google.cloud.bigquery.job.complete --trigger-resource projects/${PROJECT_ID}/jobs/{jobId} --runtime python37
+gcloud builds submit --tag gcr.io/$(gcloud config get-value project)/IMAGE-NAME
+
+gcloud run deploy YOUR-SERVICE-NAME --image gcr.io/$(gcloud config get-value project)/IMAGE-NAME
+
+
 ```
 
 # Creaete trigger
-gcloud alpha events triggers create bigquery-trigger-6 --target-service helloworld-python --type com.google.cloud.auditlog.event --parameters methodName=jobservice.jobcompleted,serviceName=bigquery.googleapis.com
+gcloud alpha events triggers create TRIGGER-NAME --target-service YOUR-SERVICE-NAME --type com.google.cloud.auditlog.event --parameters methodName=jobservice.jobcompleted,serviceName=bigquery.googleapis.com
+
+# Change environment variables values
+gcloud run services update YOUR-APP-NAME --update-env-vars KEY1=VALUE1,KEY2=VALUE2 
+
+For example:
+gcloud run services update bq-snitch --update-env-vars EMAIL_ALERT=true,SLACK_ALERT=false
+
+# Authentication
+
+If the target Cloud Run sink does not allow unauthenticated invocations, Pub/Sub will fail to send the event to the service. 
+This issue will be fixed soon, but for now, you can get around the issue by manually enabling authentication on the Pub/Sub subscription. 
+The easiest way to do this is to find the generated Pub/Sub subscription in the UI, click “EDIT”, click “Enable authentication”, 
+select the default compute service account ([PROJECT-NUM]-compute@developer.gseserviceaccount.com) from the dropdown for “Service account” 
+and paste the URL for your target service under “Audience”. Finally, click “update” at the bottom of the page and the Pub/Sub subscription 
+should now work as expected.
