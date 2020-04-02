@@ -45,7 +45,7 @@ def bq_snitch():
         if email_alert:
             utils.print_and_flush("Sending email alert")
             sender = os.environ.get("EMAIL_SENDER")
-            cc_list = os.environ.get("EMAIL_CC", "").split(",")
+            cc_list = os.environ.get("EMAIL_RECIPIENTS", "").split(",")
             sendgrid_api_key = os.environ.get("SENDGRID_API_KEY")
             alert_channels.send_email_alert(sendgrid_api_key, sender, job.query, job_id, project, location,
                                             job.user_email, cc_list, total_cost, giga_bytes_billed)

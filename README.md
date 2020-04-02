@@ -25,10 +25,10 @@ Before deploying the function, adjust the properties in Dockerfile:
  - **SLACK_WEBHOOK_URL** - If slack alerts enabled, alerts will be sent to this URL. Using the following link will help you generate the URL:
 https://api.slack.com/incoming-webhooks.
 
-- **SLACK_WEB_API_TOKEN** - If slack alerts enabled, alerts will be sent via Web API using this token. Using the following link will help you generate the token:
+ - **SLACK_WEB_API_TOKEN** - If slack alerts enabled, alerts will be sent via Web API using this token. Using the following link will help you generate the token:
 https://api.slack.com/web
 
-- **SLACK_WEB_API_DESTINATION_CHANNEL** - If slack alert enabled and SLACK_WEB_API_TOKEN is defined, alert will be sent via Web API to this channel
+ - **SLACK_WEB_API_DESTINATION_CHANNEL** - If slack alert enabled and SLACK_WEB_API_TOKEN is defined, alert will be sent via Web API to this channel
 
  - **EMAIL_ALERT** - Should email alerts be enabled (value can be either `true` or `false`)
 
@@ -36,7 +36,13 @@ https://api.slack.com/web
 
  - **EMAIL_SENDER** - The email address you want the alert email to be sent from (i.e. `bq-notifier@domain.com`)
 
- - **EMAIL_RECIPIENTS** - List of additional emails to receive the alerts. Alerts will always be sent to the user who has executed the query.
+ - **EMAIL_RECIPIENTS** - Comma separated list of additional emails to receive the alerts. Alerts will always be sent to the user who has executed the query.
+  
+ - **EXTERNAL_HANDLER** - Should external handler be invoked (value can be either `true` or `false`)
+ 
+ - **EXTERNAL_HANDLER_URL** - URL of a Post method that will receive the alert details. This feature refers to users that wants to implement their own logic for handling alerts. Following properties will be sent as json in the request body:
+ query, job_id, project, location, user_email, total_cost, giga_bytes_billed
+ 
   
 # Deploy Function
 
