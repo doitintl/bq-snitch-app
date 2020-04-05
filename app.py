@@ -89,14 +89,14 @@ def construct_post_body(query, job_id, project, location, user_email, total_cost
 
 
 def send_http(receiving_service_url, request_body, external_handler_gcp_service):
-
     if external_handler_gcp_service:
         # Get token for receiving service as explained here:
         # https://cloud.google.com/run/docs/authenticating/service-to-service
         authorization_token = get_authorization_token(receiving_service_url)
 
         # Provide the token in the request to the receiving service
-        receiving_service_headers = {'Authorization': f'bearer {authorization_token}', 'Content-type': 'application/json'}
+        receiving_service_headers = {'Authorization': f'bearer {authorization_token}',
+                                     'Content-type': 'application/json'}
     else:
         receiving_service_headers = {'Content-type': 'application/json'}
 

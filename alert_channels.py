@@ -60,7 +60,7 @@ def send_slack_alert(wekbook_url, web_api_token, dest_channel, query, job_id, pr
         if wekbook_url:
             send_slack_alert_webhook(wekbook_url, dest_channel, message_blocks)
         else:
-            utils.print_and_flush("Wekbook_URL not defined")
+            utils.print_and_flush("Webbook_URL not defined")
 
         if web_api_token:
             send_slack_alert_web_api(web_api_token, dest_channel, message_blocks, user_email)
