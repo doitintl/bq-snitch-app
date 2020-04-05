@@ -52,12 +52,13 @@ def bq_snitch():
         external_handler = str_to_bool(os.environ.get("EXTERNAL_HANDLER"))
         if external_handler:
             external_handler_url = os.environ.get("EXTERNAL_HANDLER_URL")
+            external_handler_gcp_service = str_to_bool(os.environ.get("EXTERNAL_HANDLER_GCP_SERVICE"))
             utils.print_and_flush("Sending request to external handler" + external_handler_url)
 
             body = construct_post_body(job.query, job_id, project, location, job.user_email, total_cost,
                                        giga_bytes_billed)
             json_data = json.dumps(body)
-            response_status = send_http(external_handler_url, json_data)
+            response_status = send_http(external_handler_url, json_data, external_handler_gcp_service)
 
             utils.print_and_flush("External handler response status code: " + str(response_status))
 
@@ -87,9 +88,24 @@ def construct_post_body(query, job_id, project, location, user_email, total_cost
     return body
 
 
-def send_http(receiving_service_url, request_body):
-    # Set up metadata server request
-    # See https://cloud.google.com/compute/docs/instances/verifying-instance-identity#request_signature
+def send_http(receiving_service_url, request_body, external_handler_gcp_service):
+
+    if external_handler_gcp_service:
+        # Get token for receiving service as explained here:
+        # https://cloud.google.com/run/docs/authenticating/service-to-service
+        authorization_token = get_authorization_token(receiving_service_url)
+
+        # Provide the token in the request to the receiving service
+        receiving_service_headers = {'Authorization': f'bearer {authorization_token}', 'Content-type': 'application/json'}
+    else:
+        receiving_service_headers = {'Content-type': 'application/json'}
+
+    service_response = requests.post(receiving_service_url, request_body, headers=receiving_service_headers)
+
+    return service_response.status_code
+
+
+def get_authorization_token(receiving_service_url):
     metadata_server_token_url = 'http://metadata/computeMetadata/v1/instance/service-accounts/default/identity?audience='
 
     token_request_url = metadata_server_token_url + receiving_service_url
@@ -99,11 +115,7 @@ def send_http(receiving_service_url, request_body):
     token_response = requests.get(token_request_url, headers=token_request_headers)
     jwt = token_response.content.decode("utf-8")
 
-    # Provide the token in the request to the receiving service
-    receiving_service_headers = {'Authorization': f'bearer {jwt}', 'Content-type': 'application/json'}
-    service_response = requests.post(receiving_service_url, request_body, headers=receiving_service_headers)
-
-    return service_response.status_code
+    return jwt
 
 
 if __name__ == "__main__":

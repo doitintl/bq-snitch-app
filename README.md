@@ -43,6 +43,8 @@ https://api.slack.com/web
  - **EXTERNAL_HANDLER_URL** - URL of a Post method that will receive the alert details. This feature refers to users that wants to implement their own logic for handling alerts. Following properties will be sent as json in the request body:
  query, job_id, project, location, user_email, total_cost, giga_bytes_billed
  
+ - **EXTERNAL_HANDLER_GCP_SERVICE** - Does the external handler hosted on a GCP service. In case it does, authorization token is fetched from metadata server as explained here https://cloud.google.com/run/docs/authenticating/service-to-service. (value can be either `true` or `false`)
+ 
   
 # Deploy Function
 
