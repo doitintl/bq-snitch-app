@@ -59,16 +59,21 @@ def send_slack_alert(wekbook_url, web_api_token, dest_channel, query, job_id, pr
 
         if wekbook_url:
             send_slack_alert_webhook(wekbook_url, dest_channel, message_blocks)
+        else:
+            utils.print_and_flush("Wekbook_URL not defined")
 
         if web_api_token:
             send_slack_alert_web_api(web_api_token, dest_channel, message_blocks, user_email)
+        else:
+            utils.print_and_flush("Web API not defined")
+
     except Exception as e:
         utils.print_and_flush("Failed to send slack alert. \n")
         utils.print_and_flush(e)
 
 
 def send_slack_alert_webhook(wekbook_url, dest_channel, blocks):
-    utils.print_and_flush("sending slack webhook alert")
+    utils.print_and_flush("Sending slack webhook alert")
     try:
         data = {"blocks": blocks, "channel": dest_channel}
 
@@ -80,7 +85,7 @@ def send_slack_alert_webhook(wekbook_url, dest_channel, blocks):
 
 
 def send_slack_alert_web_api(web_api_token, dest_channel, message_blocks, user_email):
-    utils.print_and_flush("sending slack web api alert")
+    utils.print_and_flush("Sending slack web api alert")
     client = slack.WebClient(web_api_token)
     try:
 
